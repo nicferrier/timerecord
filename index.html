@@ -1,0 +1,48 @@
+<html>
+  <head>
+    <link rel="shortcut icon" href="data:image/x-icon;," type="image/x-icon"/>
+    <link rel="stylesheet" href="style.css" type="text/css"/>
+    <title>timesheet</title>
+    <script src="ts.js"></script>
+  </head>
+  <body>
+    <table>
+      <thead>
+	<tr>
+	  <th>reason</th>
+	  <th>duration</th>
+	  <th>day</th>
+	</tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+    <template id="entryform">
+      <div id="collect">
+	<div id="remainingMessage"></div>
+	<form id="entry" method="POST" action="/">
+	  <input type="text"
+		 name="reason"
+		 placeholder="what were you doing?"
+		 size="72"/>
+	  <input type="number"
+		 name="duration"
+		 placeholder="how long for?"
+		 alt="the duration in minutes"
+		 required="required"
+		 value="60"
+		 min="15"
+		 max="420"
+		 step="15"/>
+	  <input type="submit" name="send"/>
+	  <span id="duration"></span>
+	  <input type="date"
+		 name="when"
+		 placeholder="when was this?"
+		 alt="when?"
+		 value=""/>
+	</form>
+      </div>
+    </template>
+  </body>
+</html>

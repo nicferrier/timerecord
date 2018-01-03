@@ -1,0 +1,34 @@
+body {
+    font-family: sans-serif;
+}
+
+input[type="submit"] {
+    display: none;
+}
+
+span#duration {
+    color: grey;
+    font-size: 10pt; /* how to do this relatively */
+}
+
+table {
+    width: 100%;
+    border: solid #EEEEEE;
+}
+
+tr {
+    width: 100%;
+}
+
+th:first-child {
+    width: 50%;
+}
+
+th {
+    color: grey;
+    text-align: left;
+}
+
+td {
+    border-top: solid #EEEEEE;
+}
