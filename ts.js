@@ -64,7 +64,7 @@ let api = {
 	tableRow.setAttribute("data-key", key);
 	tableRow.innerHTML = `<td>${obj.reason}</td>
 <td>${obj.duration}</td>
-<td>${obj.when}</td>`;
+<td data-order='${obj.when}'>${obj.when}</td>`;
 	document.importNode(tableRow);
 	let table = document.querySelector("tbody");
 	if (table.children.length > 0) {
@@ -168,6 +168,32 @@ let api = {
 	return weekDay;
     },
 
+    // send notifies if a notify of the same clasz has not been sent in 10 secs
+    sendNotify: function (clasz, message) {
+	let now = new Date().valueOf();
+
+	try {
+	    let notifyStorage = api.getStorage("notifies");
+	    let thisClasz = notifyStorage[clasz];
+	    if (thisClasz == undefined) {
+		thisClasz = { sentTime: now };
+	    }
+	    let ignoreSeconds = 1000 * 60 * 15;
+
+	    console.log("sendNotify last time", thisClasz.sentTime + ignoreSeconds, now);
+	    if (thisClasz.sentTime + ignoreSeconds < now) {
+		new Notification(message);
+		notifyStorage[clasz] = { sentTime: now, message: message };
+		window
+		    .localStorage
+		    .setItem("notifies", JSON.stringify(notifyStorage));
+	    }
+	}
+	catch (e) {
+	    console.log("e", e);
+	}
+    },
+
     stored: function (timeKeep) {
 	let expectedTime = 60 * 7;
 	let weekDates = api.thisWeekDays();
@@ -176,27 +202,26 @@ let api = {
 	    let today = api.formDate(day);
 
 	    let todayList = Object.keys(timeKeep).filter(k => k.startsWith(today));
-	    console.log("todayList", today, todayList);
+	    // console.log("api.stored - todayList", today, todayList);
 	    let totalTime = 0;
 	    if (todayList.length > 0) {
-		let durations = todayList.map(k => timeKeep[k].duration);
+		let durations = todayList.map(k => parseInt(timeKeep[k].duration));
 		totalTime = durations.reduce((a, c) => a + c);
 	    }
 	    console.log("api.stored - computing expected-total",
-			today,
-			totalTime,
-		       expectedTime - totalTime);
+			today, expectedTime - totalTime);
 
-	    badDateList.push(today);
-	    return expectedTime - totalTime;
+	    let remainingTime = expectedTime - totalTime;
+	    if (remainingTime > 0) {
+		badDateList.push(today);
+	    }
+	    return remainingTime;
 	});
 
 	let badDates = dateRecordedTimes.filter(e => e > 0);
 
-	// FIXME some notification of the remaining events to do
-
-	if (badDates.length > 0
-	    && document.querySelector("#entry") == undefined) {
+	if (badDates.length > 0) {
+	    console.log("api.stored - at least one missing time record");
 	    let todayIndex = badDates.length - 1;
 	    let timeDiff = badDates[todayIndex];
 	    let template = document.querySelector("#entryform");
@@ -204,22 +229,27 @@ let api = {
 	    let weekDay = api.dayDateToLong(badDay);
 	    let notification
 		= `you have ${timeDiff} minutes to record for ${weekDay}, ${badDay}`;
-	    let formMessage = template.content.querySelector("#remainingMessage");
-	    formMessage.textContent = notification; 
 
-	    let clone = document.importNode(template.content, true);
-	    let targetElement = document.body.firstElementChild;
-	    targetElement.parentElement.insertBefore(clone, targetElement);
-	    let form = document.querySelector("#entry");
-	    api.formInit(form, new Date(badDay));
+	    // Put the form up if it's not there
+	    if (document.querySelector("#entry") == undefined) {
+		let formMessage = template.content.querySelector("#remainingMessage");
+		formMessage.textContent = notification; 
 
+		let clone = document.importNode(template.content, true);
+		let targetElement = document.body.firstElementChild;
+		targetElement.parentElement.insertBefore(clone, targetElement);
+		let form = document.querySelector("#entry");
+		api.formInit(form, new Date(badDay));
+	    }
+
+	    // Send notifications if it's been a while since we sent one
 	    if (Notification.permission === "granted") {
-		new Notification(notification);
+		api.sendNotify("time", notification);
 	    }
 	    else if (Notification.persmission !== "denied") {
 		Notification.requestPermission(permission => {
 		    if (permission === "granted") {
-			new Notification(notification);
+			api.sendNotify("time", notification);
 		    }
 		});
 	    }
