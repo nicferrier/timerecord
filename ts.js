@@ -56,7 +56,10 @@ let api = {
             objStr = "{}";
         }
         let obj = JSON.parse(objStr);
-        return obj;
+        let sortedKeys = Object.keys(obj).sort();
+        let returnObj = {};
+        sortedKeys.reverse().forEach(k => returnObj[k] = obj[k]);
+        return returnObj;
     },
 
     makeTableRow: function (obj, key) {
