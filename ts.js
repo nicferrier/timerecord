@@ -273,16 +273,14 @@ let api = {
     init: function () {
         // get the list
         let storage = api.getStorage("timekeep");
-        /*Object.keys(storage).forEach(key => {
+        Object.keys(storage).forEach(key => {
             api.makeTableRow(storage[key], key);
-        });*/
+        });
         api.stored(storage);
-        //window.myintervalid = window.setInterval(api.cron, 5000);
+        window.myintervalid = window.setInterval(api.cron, 5000);
         window.myapi = api;
     }
 };
-
-//window.addEventListener("load", api.init);
 
 export default api;
 
